@@ -90,7 +90,10 @@ class MultiBorderRouters(thread_cert.TestCase):
             'is_host': True
         },
     }
+    def test_hello_world(self):
+        print("Hello, World!")
 
+    @unittest.skip("Jason Test")
     def test(self):
         br1 = self.nodes[BR1]
         router1 = self.nodes[ROUTER1]

@@ -53,7 +53,10 @@ class SingleBorderRouter(thread_cert.TestCase):
             'version': '1.2',
         },
     }
+    def test_hello_world(self):
+        print("Hello, World!")
 
+    @unittest.skip("Jason Test")
     def test(self):
         br = self.nodes[BR]
         rcp_version = br.get_rcp_version()

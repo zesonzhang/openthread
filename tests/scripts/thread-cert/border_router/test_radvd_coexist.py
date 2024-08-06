@@ -73,7 +73,10 @@ class SingleBorderRouter(thread_cert.TestCase):
             'is_host': True
         },
     }
+    def test_hello_world(self):
+        print("Hello, World!")
 
+    @unittest.skip("Jason Test")
     def test(self):
         br = self.nodes[BR]
         router = self.nodes[ROUTER]

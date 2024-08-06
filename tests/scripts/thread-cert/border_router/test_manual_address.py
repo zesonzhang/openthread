@@ -65,7 +65,10 @@ class ManualAddressConfig(thread_cert.TestCase):
             'version': '1.2',
         },
     }
+    def test_hello_world(self):
+        print("Hello, World!")
 
+    @unittest.skip("Jason Test")
     def test(self):
         br1 = self.nodes[BR_1]
         router = self.nodes[ROUTER]

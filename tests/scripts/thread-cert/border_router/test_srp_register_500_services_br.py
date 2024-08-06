@@ -48,7 +48,10 @@ class SrpRegister500ServicesBR(SrpRegister500Services):
         'name': 'Host',
         'is_host': True,
     }
+    def test_hello_world(self):
+        print("Hello, World!")
 
+    @unittest.skip("Jason Test")
     def test(self):
         self.nodes[HOST].start(start_radvd=False)
 

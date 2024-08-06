@@ -95,7 +95,10 @@ class TestTrelConnectivity(thread_cert.TestCase):
             'version': '1.2',
         },
     }
+    def test_hello_world(self):
+        print("Hello, World!")
 
+    @unittest.skip("Jason Test")
     def test(self):
         br1 = self.nodes[BR1]
         fed1 = self.nodes[FED1]

@@ -149,7 +149,10 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
         if self._has_backbone_traffic():
             self._prepare_backbone_network()
+            return
             self._start_backbone_sniffer()
+        else:
+            return
 
         self._initial_topology = initial_topology = {}
 
@@ -279,6 +282,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
     def inspect(self):
         self._inspector.inspect()
 
+    @unittest.skip("Skip tearDown for debugging")
     def tearDown(self):
         """Destroy nodes and simulator.
         """

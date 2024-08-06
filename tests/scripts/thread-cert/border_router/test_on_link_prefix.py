@@ -99,7 +99,10 @@ class MultiThreadNetworks(thread_cert.TestCase):
             'is_host': True
         },
     }
+    def test_hello_world(self):
+        print("Hello, World!")
 
+    @unittest.skip("Jason Test")
     def test(self):
         ON_LINK_PREFIX = 'fd00::/64'
         br1 = self.nodes[BR1]

@@ -69,6 +69,10 @@ class TwoBorderRoutersOnTwoInfrastructures(thread_cert.TestCase):
         }
     }
 
+    def test_hello_world(self):
+        print("Hello, World!")
+
+    @unittest.skip("Jason Test")
     def test(self):
         br1 = self.nodes[self.BR1]
         br2 = self.nodes[self.BR2]

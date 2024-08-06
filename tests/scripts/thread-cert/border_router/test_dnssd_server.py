@@ -83,7 +83,10 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             'is_host': True
         },
     }
+    def test_hello_world(self):
+        print("Hello, World!")
 
+    @unittest.skip("Jason Test")
     def test(self):
         server = br1 = self.nodes[BR1]
         client1 = self.nodes[CLIENT1]

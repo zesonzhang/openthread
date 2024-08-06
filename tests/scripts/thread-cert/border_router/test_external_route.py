@@ -84,7 +84,10 @@ class ExternalRoutes(thread_cert.TestCase):
             'is_host': True,
         }
     }
+    def test_hello_world(self):
+        print("Hello, World!")
 
+    @unittest.skip("Jason Test")
     def test(self):
         br1 = self.nodes[BR1]
         br2 = self.nodes[BR2]

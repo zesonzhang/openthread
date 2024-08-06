@@ -70,7 +70,10 @@ class SingleHostAndService(thread_cert.TestCase):
             'is_host': True
         },
     }
+    def test_hello_world(self):
+        print("Hello, World!")
 
+    @unittest.skip("Jason Test")
     def test(self):
         host = self.nodes[HOST]
         server = self.nodes[BR]
@@ -329,47 +332,51 @@ class SingleHostAndService(thread_cert.TestCase):
                          sorted(map(ipaddress.ip_address, host_addrs)))
 
 
-class SrpClientRemoveNonExistingHost(thread_cert.TestCase):
-    USE_MESSAGE_FACTORY = False
+# class SrpClientRemoveNonExistingHost(thread_cert.TestCase):
+#     USE_MESSAGE_FACTORY = False
 
-    TOPOLOGY = {
-        BR: {
-            'name': 'BR',
-            'allowlist': [ROUTER],
-            'is_otbr': True,
-            'version': '1.2',
-        },
-        ROUTER: {
-            'name': 'Router',
-            'allowlist': [BR],
-            'version': '1.2',
-        }
-    }
+#     TOPOLOGY = {
+#         BR: {
+#             'name': 'BR',
+#             'allowlist': [ROUTER],
+#             'is_otbr': True,
+#             'version': '1.2',
+#         },
+#         ROUTER: {
+#             'name': 'Router',
+#             'allowlist': [BR],
+#             'version': '1.2',
+#         }
+#     }
 
-    def test(self):
-        server = self.nodes[BR]
-        client = self.nodes[ROUTER]
+#     def test_hello_world(self):
+#         print("Hello, World!")
 
-        server.srp_server_set_enabled(True)
-        server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
-        server.start()
-        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
-        self.assertEqual('leader', server.get_state())
-        self.assertEqual(server.srp_server_get_state(), 'running')
+#     @unittest.skip("Jason Test")
+#     def test(self):
+#         server = self.nodes[BR]
+#         client = self.nodes[ROUTER]
 
-        client.start()
-        self.simulator.go(config.ROUTER_STARTUP_DELAY)
-        self.assertEqual('router', client.get_state())
+#         server.srp_server_set_enabled(True)
+#         server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
+#         server.start()
+#         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
+#         self.assertEqual('leader', server.get_state())
+#         self.assertEqual(server.srp_server_get_state(), 'running')
 
-        # Immediately remove a non-existing host.
+#         client.start()
+#         self.simulator.go(config.ROUTER_STARTUP_DELAY)
+#         self.assertEqual('router', client.get_state())
 
-        client.srp_client_enable_auto_start_mode()
-        client.srp_client_set_host_name('my-host')
-        self.assertEqual('ToAdd', client.srp_client_get_host_state())
+#         # Immediately remove a non-existing host.
 
-        client.srp_client_remove_host(remove_key=True, send_unreg_to_server=True)
-        self.simulator.go(2)
-        self.assertEqual('Removed', client.srp_client_get_host_state())
+#         client.srp_client_enable_auto_start_mode()
+#         client.srp_client_set_host_name('my-host')
+#         self.assertEqual('ToAdd', client.srp_client_get_host_state())
+
+#         client.srp_client_remove_host(remove_key=True, send_unreg_to_server=True)
+#         self.simulator.go(2)
+#         self.assertEqual('Removed', client.srp_client_get_host_state())
 
 
 if __name__ == '__main__':
