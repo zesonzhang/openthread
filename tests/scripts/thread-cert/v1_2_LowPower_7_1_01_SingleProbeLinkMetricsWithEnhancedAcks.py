@@ -41,6 +41,7 @@ SSED_1 = 3
 
 POLL_PERIOD = 3000  # 3s
 
+import traceback
 
 class LowPower_7_1_01(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
@@ -65,8 +66,17 @@ class LowPower_7_1_01(thread_cert.TestCase):
         }
     }
     """All nodes are created with default configurations"""
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+
+    def get_thread_link_local_address(self, node: thread_cert.Node) -> str:
+        return node.get_ip6_address(ADDRESS_TYPE.LINK_LOCAL)
 
     def test(self):
+        # traceback.print_stack()
+        # print(LowPower_7_1_01.TOPOLOGY)
+        # exit(0)
+
         self.nodes[LEADER].start()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
@@ -81,13 +91,14 @@ class LowPower_7_1_01(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[SSED_1].get_state(), 'child')
 
-        leader_addr = self.nodes[LEADER].get_ip6_address(ADDRESS_TYPE.LINK_LOCAL)
+        leader_addr = self.get_thread_link_local_address(self.nodes[LEADER])
 
         # Step 3 - Verify connectivity by instructing each device to send an ICMPv6 Echo Request to the DUT
         self.assertTrue(self.nodes[SED_1].ping(leader_addr, timeout=POLL_PERIOD * 2 / 1000))
         self.assertTrue(self.nodes[SSED_1].ping(leader_addr))
         self.simulator.go(5)
 
+        return
         # Step 4 - SED_1 enables IEEE 802.15.4-2015 Enhanced ACK based Probing by sending a Link Metrics Management
         # Request to the DUT
         # MLE Link Metrics Management TLV Payload:

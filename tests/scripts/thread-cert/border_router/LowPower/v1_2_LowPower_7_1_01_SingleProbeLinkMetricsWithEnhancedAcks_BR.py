@@ -28,11 +28,42 @@
 #
 
 import unittest
+import traceback
+import copy
 
 from v1_2_LowPower_7_1_01_SingleProbeLinkMetricsWithEnhancedAcks import LowPower_7_1_01
 from v1_2_LowPower_7_1_01_SingleProbeLinkMetricsWithEnhancedAcks import LEADER
 
-LowPower_7_1_01.TOPOLOGY[LEADER]['is_otbr'] = True
+from config import ADDRESS_TYPE, INTERFACE_TYPE
+from node import OtbrNode
+
+# LowPower_7_1_01.TOPOLOGY[LEADER]['is_otbr'] = True
+
+# def get_thread_link_local_address(self, node: OtbrNode) -> str:
+#     print(f"======node: {node}")
+#     traceback.print_stack()
+#     print(f"================")
+#     return node.get_ip6_address(ADDRESS_TYPE.LINK_LOCAL, INTERFACE_TYPE.THREAD_WPAN)
+
+# LowPower_7_1_01.get_thread_link_local_address = get_thread_link_local_address
+
+
+class LowPower_7_1_01_BR(LowPower_7_1_01):
+    TOPOLOGY = copy.deepcopy(LowPower_7_1_01.TOPOLOGY)
+    TOPOLOGY[LEADER]['is_otbr'] = True
+
+    # def __init__(self, *args, **kwargs):
+    #     #print("=========init LowPower_7_1_01_BR=============")
+    #     self.TOPOLOGY[LEADER]['is_otbr'] = True
+    #     super().__init__(*args, **kwargs)
+
+    def get_thread_link_local_address(self, node: OtbrNode) -> str:
+        return node.get_ip6_address(ADDRESS_TYPE.LINK_LOCAL, INTERFACE_TYPE.THREAD_WPAN)
+
+    #@unittest.skip("Skip")
+    def test(self):
+        super().test()
 
 if __name__ == '__main__':
-    unittest.main()
+    #unittest.main(verbosity=2, defaultTest='LowPower_7_1_01_BR')
+    unittest.main(verbosity=2)
