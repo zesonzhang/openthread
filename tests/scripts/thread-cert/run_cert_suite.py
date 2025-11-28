@@ -30,6 +30,7 @@ import logging
 import multiprocessing
 import os
 import queue
+import shutil
 import subprocess
 import time
 import traceback
@@ -41,6 +42,9 @@ import config
 THREAD_VERSION = os.getenv('THREAD_VERSION')
 VIRTUAL_TIME = int(os.getenv('VIRTUAL_TIME', '1'))
 MAX_JOBS = int(os.getenv('MAX_JOBS', (multiprocessing.cpu_count() * 2 if VIRTUAL_TIME else 10)))
+# Enable network namespace isolation for tests using Linux unshare.
+# This provides better test isolation by running each test in its own network namespace.
+OT_TEST_NETNS = int(os.getenv('OT_TEST_NETNS', '0'))
 
 _BACKBONE_TESTS_DIR = 'tests/scripts/thread-cert/backbone'
 
@@ -74,12 +78,26 @@ def run_cert(iteration_id: int, port_offset: int, script: str, run_directory: st
             print(f'Running PORT_OFFSET={port_offset} {test_name}')
             with open(logfile, 'wt') as output:
                 abs_script = os.path.abspath(script)
-                subprocess.check_call(abs_script,
-                                      stdout=output,
-                                      stderr=output,
-                                      stdin=subprocess.DEVNULL,
-                                      cwd=run_directory,
-                                      env=env)
+
+                if OT_TEST_NETNS and shutil.which('unshare'):
+                    # Run test in isolated network namespace using unshare.
+                    # This provides better test isolation - each test has its own
+                    # network namespace with isolated interfaces, preventing interference.
+                    # The loopback interface is brought up in the new namespace.
+                    cmd = ['unshare', '--net', 'sh', '-c', f'ip link set lo up && exec {abs_script}']
+                    subprocess.check_call(cmd,
+                                          stdout=output,
+                                          stderr=output,
+                                          stdin=subprocess.DEVNULL,
+                                          cwd=run_directory,
+                                          env=env)
+                else:
+                    subprocess.check_call(abs_script,
+                                          stdout=output,
+                                          stderr=output,
+                                          stdin=subprocess.DEVNULL,
+                                          cwd=run_directory,
+                                          env=env)
         except subprocess.CalledProcessError:
             bash(f'cat {logfile} 1>&2')
             logging.error("Run test %s failed, please check the log file: %s", test_name, logfile)
@@ -123,6 +141,8 @@ def parse_args():
     logging.info("Run directory: %s", args.run_directory or '.')
     logging.info("Multiply: %d", args.multiply)
     logging.info("Test scripts: %d", len(args.scripts))
+    if OT_TEST_NETNS:
+        logging.info("Network namespace isolation: enabled (OT_TEST_NETNS=1)")
     return args
 
 
