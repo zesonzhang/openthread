@@ -4340,3 +4340,117 @@ class HostNode(LinuxHost, OtbrDocker):
 
 if __name__ == '__main__':
     unittest.main()
+
+class UnshareOtbrNode(OtbrNode):
+    """
+    A subclass of OtbrNode that uses 'unshare' namespaces and veth pairs
+    instead of Docker networks for the backbone.
+    """
+    def _launch_docker(self):
+        logging.info(f'Docker image: {config.OTBR_DOCKER_IMAGE} (Unshare Mode)')
+        subprocess.check_call(f"docker rm -f {self._docker_name} || true", shell=True)
+        CI_ENV = os.getenv('CI_ENV', '').split()
+        dns = ['--dns=127.0.0.1'] if INFRA_DNS64 == 1 else ['--dns=8.8.8.8']
+        nat64_prefix = ['--nat64-prefix', '2001:db8:1:ffff::/96'] if INFRA_DNS64 == 1 else []
+        os.makedirs('/tmp/coverage/', exist_ok=True)
+
+        cmd = ['docker', 'run'] + CI_ENV + [
+            '--rm',
+            '--name',
+            self._docker_name,
+            '--network',
+            'none',  # Use none network
+        ] + dns + [
+            '-i',
+            '--sysctl',
+            'net.ipv6.conf.all.disable_ipv6=0 net.ipv4.conf.all.forwarding=1 net.ipv6.conf.all.forwarding=1',
+            '--privileged',
+            '--cap-add=NET_ADMIN',
+            '--volume',
+            f'{self._rcp_device}:/dev/ttyUSB0',
+            '-v',
+            '/tmp/coverage/:/tmp/coverage/',
+            config.OTBR_DOCKER_IMAGE,
+            '-B',
+            config.BACKBONE_IFNAME,
+            '--trel-url',
+            f'trel://{config.BACKBONE_IFNAME}',
+        ] + nat64_prefix
+        logging.info(' '.join(cmd))
+        self._docker_proc = subprocess.Popen(cmd,
+                                             stdin=subprocess.DEVNULL,
+                                             stdout=sys.stdout if self.verbose else subprocess.DEVNULL,
+                                             stderr=sys.stderr if self.verbose else subprocess.DEVNULL)
+
+        try:
+            self._wire_network()
+        except Exception:
+            self.destroy()
+            raise
+
+        launch_docker_deadline = time.time() + 300
+        launch_ok = False
+
+        while time.time() < launch_docker_deadline:
+            try:
+                subprocess.check_call(f'docker exec -i {self._docker_name} ot-ctl state', shell=True)
+                launch_ok = True
+                logging.info("OTBR Docker %s on %s Is Ready!", self._docker_name, self.backbone_network)
+                break
+            except subprocess.CalledProcessError:
+                time.sleep(5)
+                continue
+
+        assert launch_ok
+
+        self.start_ot_ctl()
+
+    def _wire_network(self):
+        # Poll for PID
+        pid = None
+        for _ in range(30):
+            try:
+                res = subprocess.check_output(f"docker inspect -f '{{{{.State.Pid}}}}' {self._docker_name}", shell=True)
+                pid = res.decode().strip()
+                if pid and pid != '0':
+                    break
+            except subprocess.CalledProcessError:
+                pass
+            time.sleep(1)
+
+        assert pid, "Could not get Docker PID"
+        logging.info(f"Docker PID: {pid}")
+
+        veth_host = f"veth{self.nodeid}"
+        veth_guest = f"veth{self.nodeid}g"
+
+        # Parse backbone ID from name (backboneX.Y)
+        try:
+             # name format: backbone<PORT_OFFSET>.<id>
+             backbone_suffix = self.backbone_network.split('.')[-1]
+             backbone_id = int(backbone_suffix)
+        except ValueError:
+             backbone_id = 0
+
+        # IP calc
+        ipv4_addr = f"172.16.{backbone_id}.{self.nodeid}/24"
+        ipv6_addr = f"fd00:0:0:{backbone_id}::{self.nodeid}/64"
+
+        # Commands
+        cmds = [
+            f"ip link add {veth_host} type veth peer name {veth_guest}",
+            f"ip link set {veth_host} netns {self.backbone_network}", # Move host-side veth to backbone namespace
+            # We need to execute inside backbone namespace to attach to bridge
+            f"ip netns exec {self.backbone_network} ip link set {veth_host} master br0",
+            f"ip netns exec {self.backbone_network} ip link set {veth_host} up",
+
+            f"ip link set {veth_guest} netns {pid}",
+            f"nsenter -t {pid} -n ip link set {veth_guest} name eth0",
+            f"nsenter -t {pid} -n ip link set eth0 up",
+            f"nsenter -t {pid} -n ip addr add {ipv4_addr} dev eth0",
+            f"nsenter -t {pid} -n ip -6 addr add {ipv6_addr} dev eth0"
+        ]
+
+        for cmd in cmds:
+            logging.info(f"Wiring: {cmd}")
+            subprocess.check_call(cmd, shell=True)

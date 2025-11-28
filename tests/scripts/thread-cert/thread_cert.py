@@ -42,7 +42,7 @@ from typing import Optional, Callable, Union, Mapping, Any
 
 import config
 import debug
-from node import Node, OtbrNode, HostNode
+from node import Node, OtbrNode, HostNode, UnshareOtbrNode
 from pktverify import utils as pvutils
 
 PACKET_VERIFICATION = int(os.getenv('PACKET_VERIFICATION', 0))
@@ -166,7 +166,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             logging.info("Creating node %d: %r", i, params)
             logging.info("Backbone network: %s", backbone_network_name)
 
-            if params['is_otbr']:
+            if params.get('use_unshare') and params['is_otbr']:
+                nodeclass = UnshareOtbrNode
+            elif params['is_otbr']:
                 nodeclass = OtbrNode
             elif params['is_host']:
                 nodeclass = HostNode
@@ -573,18 +575,37 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             backbone = f'{config.BACKBONE_DOCKER_NETWORK_NAME}.{id}'
             backbone_prefix = f'{config.BACKBONE_IPV6_ADDR_START}:{id}::/64'
             self._backbone_network_names.append(backbone)
-            self.assure_run_ok(
-                f'docker network create --driver bridge --ipv6 --subnet {backbone_prefix} -o "com.docker.network.bridge.name"="{backbone}" {backbone} || true',
-                shell=True)
+
+            # Check if any node requests unshare mode
+            use_unshare = any(p.get('use_unshare') for p in self.TOPOLOGY.values())
+
+            if use_unshare:
+                # Create network namespace and bridge for unshare mode
+                self.assure_run_ok(f'ip netns add {backbone}', shell=True)
+                self.assure_run_ok(f'ip netns exec {backbone} ip link add name br0 type bridge', shell=True)
+                self.assure_run_ok(f'ip netns exec {backbone} ip link set br0 up', shell=True)
+            else:
+                # Docker network mode
+                self.assure_run_ok(
+                    f'docker network create --driver bridge --ipv6 --subnet {backbone_prefix} -o "com.docker.network.bridge.name"="{backbone}" {backbone} || true',
+                    shell=True)
 
     def _remove_backbone_network(self):
+        # Check if unshare mode
+        use_unshare = any(p.get('use_unshare') for p in self.TOPOLOGY.values())
+
         for network_name in self._backbone_network_names:
-            self.assure_run_ok(f'docker network rm {network_name}', shell=True)
+            if use_unshare:
+                 self.assure_run_ok(f'ip netns del {network_name} || true', shell=True)
+            else:
+                 self.assure_run_ok(f'docker network rm {network_name}', shell=True)
 
     def _start_backbone_sniffer(self):
         assert self._backbone_network_names, 'Internal Error: self._backbone_network_names is empty'
         # TODO: support sniffer on multiple backbone networks
-        sniffer_interface = self._backbone_network_names[0]
+        backbone_name = self._backbone_network_names[0]
+
+        use_unshare = any(p.get('use_unshare') for p in self.TOPOLOGY.values())
 
         # don't know why but I have to create the empty bbr.pcap first, otherwise tshark won't work
         # self.assure_run_ok("truncate --size 0 bbr.pcap && chmod 664 bbr.pcap", shell=True)
@@ -595,7 +616,17 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             pass
 
         dumpcap = pvutils.which_dumpcap()
-        self._dumpcap_proc = subprocess.Popen([dumpcap, '-i', sniffer_interface, '-w', pcap_file],
+
+        if use_unshare:
+            # Sniff inside the namespace on the bridge
+            cmd = ['ip', 'netns', 'exec', backbone_name, dumpcap, '-i', 'br0', '-w', pcap_file]
+            logging.info(f"Starting backbone sniffer in namespace {backbone_name}: {' '.join(cmd)}")
+        else:
+            # Sniff on the docker bridge interface (same name as network name)
+            sniffer_interface = backbone_name
+            cmd = [dumpcap, '-i', sniffer_interface, '-w', pcap_file]
+
+        self._dumpcap_proc = subprocess.Popen(cmd,
                                               stdout=sys.stdout,
                                               stderr=sys.stderr)
         time.sleep(0.2)

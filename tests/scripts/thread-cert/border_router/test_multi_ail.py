@@ -59,6 +59,7 @@ class ThreeBRs_TwoInfra(thread_cert.TestCase):
             'allowlist': [BR2],
             'is_otbr': True,
             'version': '1.4',
+            'use_unshare': True,
         },
         BR2: {
             'name': 'BR_2',
@@ -66,6 +67,7 @@ class ThreeBRs_TwoInfra(thread_cert.TestCase):
             'allowlist': [BR1, BR3],
             'is_otbr': True,
             'version': '1.4',
+            'use_unshare': True,
         },
         BR3: {
             'name': 'BR_3',
@@ -73,6 +75,7 @@ class ThreeBRs_TwoInfra(thread_cert.TestCase):
             'allowlist': [BR2],
             'is_otbr': True,
             'version': '1.4',
+            'use_unshare': True,
         }
     }
 
