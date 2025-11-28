@@ -30,6 +30,7 @@ import logging
 import multiprocessing
 import os
 import queue
+import shlex
 import shutil
 import subprocess
 import time
@@ -79,18 +80,30 @@ def run_cert(iteration_id: int, port_offset: int, script: str, run_directory: st
             with open(logfile, 'wt') as output:
                 abs_script = os.path.abspath(script)
 
-                if OT_TEST_NETNS and shutil.which('unshare'):
-                    # Run test in isolated network namespace using unshare.
-                    # This provides better test isolation - each test has its own
-                    # network namespace with isolated interfaces, preventing interference.
-                    # The loopback interface is brought up in the new namespace.
-                    cmd = ['unshare', '--net', 'sh', '-c', f'ip link set lo up && exec {abs_script}']
-                    subprocess.check_call(cmd,
-                                          stdout=output,
-                                          stderr=output,
-                                          stdin=subprocess.DEVNULL,
-                                          cwd=run_directory,
-                                          env=env)
+                if OT_TEST_NETNS:
+                    if shutil.which('unshare'):
+                        # Run test in isolated network namespace using unshare.
+                        # This provides better test isolation - each test has its own
+                        # network namespace with isolated interfaces, preventing interference.
+                        # The loopback interface is brought up in the new namespace.
+                        # Use shlex.quote to safely escape the script path for shell execution.
+                        quoted_script = shlex.quote(abs_script)
+                        cmd = ['unshare', '--net', 'sh', '-c', f'ip link set lo up && exec {quoted_script}']
+                        subprocess.check_call(cmd,
+                                              stdout=output,
+                                              stderr=output,
+                                              stdin=subprocess.DEVNULL,
+                                              cwd=run_directory,
+                                              env=env)
+                    else:
+                        logging.warning("OT_TEST_NETNS is enabled but 'unshare' is not available. "
+                                        "Running test without network namespace isolation.")
+                        subprocess.check_call(abs_script,
+                                              stdout=output,
+                                              stderr=output,
+                                              stdin=subprocess.DEVNULL,
+                                              cwd=run_directory,
+                                              env=env)
                 else:
                     subprocess.check_call(abs_script,
                                           stdout=output,
