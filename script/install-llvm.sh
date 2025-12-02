@@ -42,30 +42,39 @@ fi
 LLVM_PACKAGE="LLVM-${LLVM_VERSION}-Linux-X64"
 LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/${LLVM_PACKAGE}.tar.xz"
 INSTALL_DIR="/opt/llvm-${LLVM_VERSION}"
-TEMP_DIR=$(mktemp -d)
+if [ -x "${INSTALL_DIR}/bin/clang-format" ]; then
+    echo "LLVM ${LLVM_VERSION} is already installed at ${INSTALL_DIR}, skipping download..."
+else
+    TEMP_DIR=$(mktemp -d)
 
-cleanup()
-{
-    rm -rf "${TEMP_DIR}"
-}
+    cleanup()
+    {
+        rm -rf "${TEMP_DIR}"
+    }
 
-trap cleanup EXIT
+    trap cleanup EXIT
 
-cd "${TEMP_DIR}"
+    cd "${TEMP_DIR}"
 
-echo "Downloading LLVM from ${LLVM_URL}..."
-wget -O llvm.tar.xz "${LLVM_URL}"
+    echo "Downloading LLVM from ${LLVM_URL}..."
+    wget -O llvm.tar.xz "${LLVM_URL}"
 
-echo "Uncompressing to ${TEMP_DIR}..."
-tar xf llvm.tar.xz
+    echo "Uncompressing to ${TEMP_DIR}..."
+    tar xf llvm.tar.xz
 
-echo "Installing to ${INSTALL_DIR}..."
-sudo mkdir -p /opt
-sudo mv "${LLVM_PACKAGE}" "${INSTALL_DIR}"
+    echo "Installing to ${INSTALL_DIR}..."
+    sudo mkdir -p /opt
+    if [ -d "${INSTALL_DIR}" ]; then
+        sudo rm -rf "${INSTALL_DIR}"
+    fi
+    sudo mv "${LLVM_PACKAGE}" "${INSTALL_DIR}"
+fi
 
 echo "Creating symlinks in /usr/local/bin..."
-sudo ln -sf "${INSTALL_DIR}/bin/clang-format" "/usr/local/bin/clang-format-19"
-sudo ln -sf "${INSTALL_DIR}/bin/clang-tidy" "/usr/local/bin/clang-tidy-19"
-sudo ln -sf "${INSTALL_DIR}/bin/clang-apply-replacements" "/usr/local/bin/clang-apply-replacements-19"
+for tool in clang-format clang-tidy clang-apply-replacements; do
+    if [ ! -L "/usr/local/bin/${tool}-19" ] || [ "$(readlink -f "/usr/local/bin/${tool}-19")" != "${INSTALL_DIR}/bin/${tool}" ]; then
+        sudo ln -sf "${INSTALL_DIR}/bin/${tool}" "/usr/local/bin/${tool}-19"
+    fi
+done
 
 echo "Done."
