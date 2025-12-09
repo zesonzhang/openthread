@@ -52,7 +52,7 @@ cleanup()
 trap cleanup EXIT
 
 # Check if LLVM is already installed
-if [ -d "${INSTALL_DIR}" ] && [ -x "${INSTALL_DIR}/bin/clang-format" ]; then
+if [ -d "${INSTALL_DIR}" ] && [ -x "${INSTALL_DIR}/bin/clang-format" ] && [ -x "${INSTALL_DIR}/bin/clang-tidy" ] && [ -x "${INSTALL_DIR}/bin/clang-apply-replacements" ]; then
     echo "LLVM ${LLVM_VERSION} is already installed at ${INSTALL_DIR}."
     echo "Creating symlinks in /usr/local/bin..."
     sudo ln -sf "${INSTALL_DIR}/bin/clang-format" "/usr/local/bin/clang-format-19"
