@@ -51,6 +51,22 @@ cleanup()
 
 trap cleanup EXIT
 
+create_symlinks()
+{
+    echo "Creating symlinks in /usr/local/bin..."
+    sudo ln -sf "${INSTALL_DIR}/bin/clang-format" "/usr/local/bin/clang-format-19"
+    sudo ln -sf "${INSTALL_DIR}/bin/clang-tidy" "/usr/local/bin/clang-tidy-19"
+    sudo ln -sf "${INSTALL_DIR}/bin/clang-apply-replacements" "/usr/local/bin/clang-apply-replacements-19"
+}
+
+# Check if LLVM is already installed
+if [ -d "${INSTALL_DIR}" ] && [ -x "${INSTALL_DIR}/bin/clang-format" ] && [ -x "${INSTALL_DIR}/bin/clang-tidy" ] && [ -x "${INSTALL_DIR}/bin/clang-apply-replacements" ]; then
+    echo "LLVM ${LLVM_VERSION} is already installed at ${INSTALL_DIR}."
+    create_symlinks
+    echo "Done."
+    exit 0
+fi
+
 cd "${TEMP_DIR}"
 
 echo "Downloading LLVM from ${LLVM_URL}..."
@@ -63,9 +79,6 @@ echo "Installing to ${INSTALL_DIR}..."
 sudo mkdir -p /opt
 sudo mv "${LLVM_PACKAGE}" "${INSTALL_DIR}"
 
-echo "Creating symlinks in /usr/local/bin..."
-sudo ln -sf "${INSTALL_DIR}/bin/clang-format" "/usr/local/bin/clang-format-19"
-sudo ln -sf "${INSTALL_DIR}/bin/clang-tidy" "/usr/local/bin/clang-tidy-19"
-sudo ln -sf "${INSTALL_DIR}/bin/clang-apply-replacements" "/usr/local/bin/clang-apply-replacements-19"
+create_symlinks
 
 echo "Done."
