@@ -4431,6 +4431,7 @@ Mle::Attacher::Attacher(Instance &aInstance)
     , mAddressRegistrationMode(kAppendAllAddresses)
     , mParentRequestCounter(0)
     , mAnnounceChannel(0)
+    , mChildIdRequestsRemaining(kMaxChildIdRequests)
     , mAttachCounter(0)
     , mAnnounceDelay(kAnnounceTimeout)
     , mTimer(aInstance)
@@ -4667,15 +4668,15 @@ bool Mle::Attacher::HasAcceptableParentCandidate(void) const
     bool              hasAcceptableParent = false;
     ParentRequestType parentReqType;
 
-    VerifyOrExit(mParentCandidate.IsStateParentResponse());
-
     switch (mState)
     {
     case kStateAnnounce:
+        VerifyOrExit(mParentCandidate.IsStateParentResponse());
         VerifyOrExit(!HasMoreChannelsToAnnounce());
         break;
 
     case kStateParentRequest:
+        VerifyOrExit(mParentCandidate.IsStateParentResponse());
         SuccessOrAssert(DetermineParentRequestType(parentReqType));
 
         if (parentReqType == kToRouters)
@@ -4687,6 +4688,11 @@ bool Mle::Attacher::HasAcceptableParentCandidate(void) const
             VerifyOrExit(mParentCandidate.GetTwoWayLinkQuality() == kLinkQuality3);
         }
 
+        break;
+
+    case kStateChildIdRequest:
+        VerifyOrExit(mParentCandidate.IsStateValid());
+        VerifyOrExit(mChildIdRequestsRemaining > 0);
         break;
 
     default:
@@ -4732,7 +4738,8 @@ void Mle::Attacher::HandleTimer(void)
     if (HasAcceptableParentCandidate() && (SendChildIdRequest() == kErrorNone))
     {
         SetState(kStateChildIdRequest);
-        delay = kChildIdResponseTimeout;
+        mChildIdRequestsRemaining--;
+        delay = Random::NonCrypto::AddJitter(kChildIdResponseTimeout, kChildIdResponseJitter);
         ExitNow();
     }
 
@@ -4750,6 +4757,7 @@ void Mle::Attacher::HandleTimer(void)
         mParentCandidate.SetState(Neighbor::kStateInvalid);
         mReceivedResponseFromParent = false;
         mParentRequestCounter       = 0;
+        mChildIdRequestsRemaining   = kMaxChildIdRequests;
         Get<MeshForwarder>().SetRxOnWhenIdle(true);
 
         OT_FALL_THROUGH;
