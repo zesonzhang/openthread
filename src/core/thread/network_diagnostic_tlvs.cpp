@@ -170,14 +170,11 @@ void ChildTlvValue::InitFrom(const Child &aChild)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// RouterNeighborTlv
+// RouterNeighborTlvValue
 
-void RouterNeighborTlv::InitFrom(const Router &aRouter)
+void RouterNeighborTlvValue::InitFrom(const Router &aRouter)
 {
     Clear();
-
-    SetType(kRouterNeighbor);
-    SetLength(sizeof(*this) - sizeof(Tlv));
 
     mFlags |= kFlagsTrackErrRate;
     mRloc16           = BigEndian::HostSwap16(aRouter.GetRloc16());
