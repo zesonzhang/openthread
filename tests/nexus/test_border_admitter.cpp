@@ -1920,7 +1920,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[0].mReceived);
     VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[0].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that the accepted `joiners[0]` is tracked by `enrollers[0]` entry on `admitter`");
@@ -2296,7 +2296,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[0].mReceived);
     VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[0].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that both accepted `joiners` are tracked by `enrollers[0]` on `admitter`");
@@ -2411,7 +2411,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[1].mReceived);
     VerifyOrQuit(responseContexts[1].mResponseState == MeshCoP::StateTlv::kReject);
-    VerifyOrQuit(!responseContexts[1].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[1].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate `joiners[1]` is still accepted by `enrollers[0]`");
@@ -2524,7 +2524,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[0].mReceived);
     VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[0].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that there is no change in the `enrollers` list and the tracked `joiners` on `admitter`");
@@ -2591,7 +2591,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[0].mReceived);
     VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[0].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that the released `joiners[0]` is removed on `admitter`");
@@ -2642,7 +2642,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[0].mReceived);
     VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[0].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send an `EnrollerJoinerRelease` message releasing `joiners[1]` from `enrollers[0]`");
@@ -2660,7 +2660,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[0].mReceived);
     VerifyOrQuit(responseContexts[0].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[0].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[0].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send two `EnrollerJoinerAccept` messages from `enrollers[2]` accepting both `joiners`");
@@ -2681,7 +2681,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
         VerifyOrQuit(responseContexts[2].mReceived);
         VerifyOrQuit(responseContexts[2].mResponseState == MeshCoP::StateTlv::kAccept);
-        VerifyOrQuit(!responseContexts[2].mHasAdmitterState);
+        VerifyOrQuit(responseContexts[2].mHasAdmitterState);
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2750,7 +2750,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[2].mReceived);
     VerifyOrQuit(responseContexts[2].mResponseState == MeshCoP::StateTlv::kAccept);
-    VerifyOrQuit(!responseContexts[2].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[2].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Validate that all previously accepted joiners by `enrollers[2]` on `admitter` are now removed");
@@ -2791,7 +2791,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
     VerifyOrQuit(responseContexts[2].mReceived);
     VerifyOrQuit(responseContexts[2].mResponseState == MeshCoP::StateTlv::kReject);
-    VerifyOrQuit(!responseContexts[2].mHasAdmitterState);
+    VerifyOrQuit(responseContexts[2].mHasAdmitterState);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Log("Send two `EnrollerJoinerAccept` messages from `enrollers[2]` accepting both `joiners`");
@@ -2812,7 +2812,7 @@ void TestBorderAdmitterJoinerEnrollerInteraction(void)
 
         VerifyOrQuit(responseContexts[2].mReceived);
         VerifyOrQuit(responseContexts[2].mResponseState == MeshCoP::StateTlv::kAccept);
-        VerifyOrQuit(!responseContexts[2].mHasAdmitterState);
+        VerifyOrQuit(responseContexts[2].mHasAdmitterState);
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
