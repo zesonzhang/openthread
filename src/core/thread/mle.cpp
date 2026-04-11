@@ -1261,8 +1261,7 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
         break;
 
     case kRoleChild:
-        SuccessOrExit(error = message->AppendSourceAddressTlv());
-        SuccessOrExit(error = message->AppendLeaderDataTlv());
+        SuccessOrExit(error = message->AppendSourceAddressAndLeaderDataTlvs());
         SuccessOrExit(error = message->AppendTimeoutTlv((aMode == kAppendZeroTimeout) ? 0 : mTimeout));
         SuccessOrExit(error = message->AppendSupervisionIntervalTlvIfSleepyChild());
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -3545,6 +3544,9 @@ exit:
     return message;
 }
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// TxMessage - Append single TLV
+
 Error Mle::TxMessage::AppendSourceAddressTlv(void)
 {
     return Tlv::Append<SourceAddressTlv>(*this, Get<Mle>().GetRloc16());
@@ -3587,17 +3589,6 @@ Error Mle::TxMessage::AppendLinkFrameCounterTlv(void)
 Error Mle::TxMessage::AppendMleFrameCounterTlv(void)
 {
     return Tlv::Append<MleFrameCounterTlv>(*this, Get<KeyManager>().GetMleFrameCounter());
-}
-
-Error Mle::TxMessage::AppendLinkAndMleFrameCounterTlvs(void)
-{
-    Error error;
-
-    SuccessOrExit(error = AppendLinkFrameCounterTlv());
-    error = AppendMleFrameCounterTlv();
-
-exit:
-    return error;
 }
 
 Error Mle::TxMessage::AppendAddress16Tlv(uint16_t aRloc16) { return Tlv::Append<Address16Tlv>(*this, aRloc16); }
@@ -3827,17 +3818,6 @@ exit:
     return error;
 }
 
-Error Mle::TxMessage::AppendActiveAndPendingTimestampTlvs(void)
-{
-    Error error;
-
-    SuccessOrExit(error = AppendActiveTimestampTlv());
-    error = AppendPendingTimestampTlv();
-
-exit:
-    return error;
-}
-
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 Error Mle::TxMessage::AppendCslChannelTlv(void)
 {
@@ -3872,6 +3852,45 @@ Error Mle::TxMessage::AppendCslClockAccuracyTlv(void)
     return Append(cslClockAccuracyTlv);
 }
 #endif
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// TxMessage - Append multiple TLVs
+
+Error Mle::TxMessage::AppendLinkAndMleFrameCounterTlvs(void)
+{
+    Error error;
+
+    SuccessOrExit(error = AppendLinkFrameCounterTlv());
+    error = AppendMleFrameCounterTlv();
+
+exit:
+    return error;
+}
+
+Error Mle::TxMessage::AppendSourceAddressAndLeaderDataTlvs(void)
+{
+    Error error;
+
+    SuccessOrExit(error = AppendSourceAddressTlv());
+    error = AppendLeaderDataTlv();
+
+exit:
+    return error;
+}
+
+Error Mle::TxMessage::AppendActiveAndPendingTimestampTlvs(void)
+{
+    Error error;
+
+    SuccessOrExit(error = AppendActiveTimestampTlv());
+    error = AppendPendingTimestampTlv();
+
+exit:
+    return error;
+}
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// TxMessage - Misc
 
 Error Mle::TxMessage::SendTo(const Ip6::Address &aDestination)
 {
