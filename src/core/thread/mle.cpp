@@ -1231,7 +1231,7 @@ Error Mle::SendChildUpdateRequestToParent(ChildUpdateRequestMode aMode)
     }
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
+    SuccessOrExit(error = message->AppendModeTlv());
 
     switch (aMode)
     {
@@ -3554,6 +3554,8 @@ Error Mle::TxMessage::AppendSourceAddressTlv(void)
 
 Error Mle::TxMessage::AppendStatusTlv(Status aStatus) { return Tlv::Append<StatusTlv>(*this, aStatus); }
 
+Error Mle::TxMessage::AppendModeTlv(void) { return AppendModeTlv(Get<Mle>().GetDeviceMode()); }
+
 Error Mle::TxMessage::AppendModeTlv(DeviceMode aMode) { return Tlv::Append<ModeTlv>(*this, aMode.Get()); }
 
 Error Mle::TxMessage::AppendTimeoutTlv(uint32_t aTimeout) { return Tlv::Append<TimeoutTlv>(*this, aTimeout); }
@@ -5017,7 +5019,7 @@ void Mle::Attacher::SendParentRequest(ParentRequestType aType)
     }
 
     VerifyOrExit((message = Get<Mle>().NewMleMessage(kCommandParentRequest)) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = message->AppendModeTlv(Get<Mle>().mDeviceMode));
+    SuccessOrExit(error = message->AppendModeTlv());
     SuccessOrExit(error = message->AppendChallengeTlv(mParentRequestChallenge));
     SuccessOrExit(error = message->AppendScanMaskTlv(scanMask));
     SuccessOrExit(error = message->AppendVersionTlv());
@@ -5134,7 +5136,7 @@ Error Mle::Attacher::SendChildIdRequest(void)
     VerifyOrExit((message = Get<Mle>().NewMleMessage(kCommandChildIdRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendResponseTlv(mParentCandidate.mRxChallenge));
     SuccessOrExit(error = message->AppendLinkAndMleFrameCounterTlvs());
-    SuccessOrExit(error = message->AppendModeTlv(Get<Mle>().mDeviceMode));
+    SuccessOrExit(error = message->AppendModeTlv());
     SuccessOrExit(error = message->AppendTimeoutTlv(Get<Mle>().mTimeout));
     SuccessOrExit(error = message->AppendVersionTlv());
     SuccessOrExit(error = message->AppendSupervisionIntervalTlvIfSleepyChild());
