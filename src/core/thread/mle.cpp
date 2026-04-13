@@ -4036,7 +4036,7 @@ Error Mle::TxMessage::AppendSteeringDataTlv(void)
         SuccessOrExit(Get<NetworkData::Leader>().FindSteeringData(steeringData));
     }
 
-    error = Tlv::Append<MeshCoP::SteeringDataTlv>(*this, steeringData.GetData(), steeringData.GetLength());
+    error = MeshCoP::SteeringDataTlv::AppendTo(*this, steeringData);
 
 exit:
     return error;
