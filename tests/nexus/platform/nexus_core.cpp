@@ -1061,9 +1061,10 @@ void Core::SendAndVerifyEchoRequest(Node               &aSender,
 
     aSender.SendEchoRequest(aDestination, kIdentifier, aPayloadSize, aHopLimit);
     AdvanceTime(aResponseTimeout);
-    VerifyOrQuit(icmpContext.mResponseReceived);
 
     SuccessOrQuit(aSender.Get<Ip6::Icmp>().UnregisterHandler(icmpHandler));
+
+    VerifyOrQuit(icmpContext.mResponseReceived);
 }
 
 void Core::SendAndVerifyEchoRequest(Node               &aSender,
