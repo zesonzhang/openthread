@@ -393,6 +393,7 @@ ot_nexus_test(dtls "core;nexus")
 ot_nexus_test(form_join "core;nexus")
 ot_nexus_test(dataset_updater "core;nexus")
 ot_nexus_test(mle_blocking_downgrade "core;nexus")
+ot_nexus_test(router_downgrade_on_sec_policy_change "core;nexus")
 ot_nexus_test(nat64_translator "core;nexus")
 ot_nexus_test(srp_lease "core;nexus")
 
