@@ -411,6 +411,7 @@ ot_nexus_test(srp_client_remove_host "core;nexus")
 ot_nexus_test(srp_client_save_server_info "core;nexus")
 ot_nexus_test(srp_lease "core;nexus")
 ot_nexus_test(srp_many_services_mtu_check "core;nexus")
+ot_nexus_test(srp_register_services_diff_lease "core;nexus")
 ot_nexus_test(srp_scale "core;nexus")
 ot_nexus_test(zero_len_external_route "core;nexus")
 
