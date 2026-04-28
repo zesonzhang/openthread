@@ -237,6 +237,7 @@ DEFAULT_TESTS=(
     "inform_previous_parent_on_reattach"
     "leader_reboot_multiple_link_request"
     "router_reboot_multiple_link_request"
+    "pbbr_aloc"
 )
 
 # Use provided arguments or the default test list
